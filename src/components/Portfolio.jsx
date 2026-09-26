@@ -2,21 +2,117 @@ import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import HeroConsole from "./HeroConsole";
 import ExperienceLog from "./ExperienceLog";
+import SkillsGlobe from "./SkillsGlobe";
+import GithubProjectsExplorer from "./GithubProjectsExplorer";
 
+// ════════════════════════════════════════
+//  SIDE HUD NAVIGATION (Desktop & Mobile)
+// ════════════════════════════════════════
+const NAV_ITEMS = [
+  { id: "hero", label: "Home", file: "main.ts", icon: "⟨/⟩" },
+  { id: "about", label: "About.system", file: "about.md", icon: "ℹ" },
+  { id: "skills", label: "Skills.matrix", file: "skills.json", icon: "⌘" },
+  { id: "projects", label: "Projects.registry", file: "projects/", icon: "⎇" },
+  { id: "experience", label: "Execution_Log", file: "experience.git", icon: "⚙" },
+  { id: "education", label: "Education.log", file: "education.json", icon: "◈" },
+];
 
+function SideHudNav() {
+  const [activeSection, setActiveSection] = useState("hero");
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 250;
+      for (const item of NAV_ITEMS) {
+        const el = document.getElementById(item.id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            setActiveSection(item.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <>
+      {/* Right HUD Floating Dot Navigation (Desktop) */}
+      <div className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col items-center gap-3">
+        <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#4338CA]/30 to-transparent -z-10" />
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeSection === item.id;
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className="group relative flex items-center justify-center w-10 h-10 transition-all outline-none"
+              aria-label={item.label}
+            >
+              {/* Tooltip Hover Badge */}
+              <div className="absolute right-12 px-3 py-1.5 rounded-md bg-[#FFFFFF] border border-[#E5E2DC] text-xs font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 pointer-events-none shadow-lg flex items-center gap-2">
+                <span className="text-[#4338CA]">&gt;</span>
+                <span className={isActive ? "text-[#4338CA] font-bold" : "text-[#5C6670]"}>{item.label}</span>
+              </div>
+
+              {/* Dot Ring Indicator */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                {isActive ? (
+                  <div className="rounded-full w-8 h-8 bg-[#FFFFFF] border-2 border-[#4338CA] text-[#4338CA] flex items-center justify-center font-mono text-xs shadow-[0_0_12px_rgba(67,56,202,0.25)]">
+                    {item.icon}
+                  </div>
+                ) : (
+                  <div className="w-3 h-3 rounded-full bg-[#E5E2DC] border border-[#E5E2DC] group-hover:w-4 group-hover:h-4 group-hover:border-[#4338CA]/60 group-hover:bg-[#4338CA]/20 transition-all" />
+                )}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Bottom Floating Navigation Dock (Mobile) */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 border-t border-[#E5E2DC] bg-[#FFFFFF]/95 backdrop-blur-md z-50 md:hidden px-3 py-2 flex justify-around items-center shadow-lg"
+        style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+      >
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeSection === item.id;
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className={`p-2 rounded-lg font-mono text-xs transition-colors flex flex-col items-center gap-1 ${
+                isActive ? "text-[#4338CA] bg-[#EEF0F7] border border-[#4338CA]/30" : "text-[#5C6670] hover:text-[#1A1A1A]"
+              }`}
+            >
+              <span className="text-sm">{item.icon}</span>
+              <span className="text-[10px]">{item.file.split(".")[0]}</span>
+            </a>
+          );
+        })}
+      </nav>
+    </>
+  );
+}
 
 // ════════════════════════════════════════
 //  SECTION WRAPPER
 // ════════════════════════════════════════
-function Section({ id, label, children }) {
+function Section({ id, label, children, subtitle }) {
   return (
-    <section id={id} className="w-full bg-[#0a0d14] py-16 px-4 font-mono text-sm">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <section id={id} className="w-full bg-transparent py-20 px-4 font-mono text-sm relative border-t border-[#E5E2DC]">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Section Header */}
-        <div className="border-b border-gray-800/80 pb-4">
-          <h2 className="text-3xl font-bold text-[#3ed882] tracking-wide flex items-center gap-2">
-            <span className="text-[#3ed882]">#</span> {label}
+        <div className="border-b border-[#E5E2DC] pb-4 space-y-1">
+          <h2 className="text-3xl font-bold text-[#4338CA] tracking-wide flex items-center gap-2">
+            <span className="text-[#4338CA]">&gt;</span> #{label}
           </h2>
+          {subtitle && <p className="text-[#5C6670] font-sans text-sm">{subtitle}</p>}
         </div>
         {children}
       </div>
@@ -25,330 +121,280 @@ function Section({ id, label, children }) {
 }
 
 // ════════════════════════════════════════
-//  EDUCATION
+//  ABOUT.SYSTEM
 // ════════════════════════════════════════
-const EDU_DATA = [
-  {
-    degree: "B.Tech — Computer Science & Engineering",
-    institution: "JSS Academy of Technical Education",
-    location: "Noida, UP",
-    period: "2023 – 2027",
-    gpa: "Expected 8.5 CGPA",
-    highlights: [
-      "Data Structures & Algorithms",
-      "Database Management Systems",
-      "Operating Systems",
-      "Computer Networks",
-      "Web Technologies",
-    ],
-    color: "cyan",
-  },
-  {
-    degree: "Class XII — Science (PCM + CS)",
-    institution: "CISCE Board",
-    location: "India",
-    period: "2022",
-    gpa: "96%",
-    highlights: [
-      "Physics, Chemistry, Mathematics",
-      "Computer Science",
-      "English Core",
-    ],
-    color: "purple",
-  },
-];
+function AboutSystem() {
+  const stats = [
+    { value: "150+", label: "LeetCode DSA Solved", sub: "Core Java & Algorithms", color: "text-[#4338CA]" },
+    { value: "< 2s", label: "AI Response Latency", sub: "ULTRON Multithreaded Speech", color: "text-[#0D9488]" },
+    { value: "~30%", label: "Query Latency Reduction", sub: "PostgreSQL & PostGIS KNN", color: "text-[#4338CA]" },
+    { value: "5+", label: "REST Microservice Endpoints", sub: "Spring Boot & Telstra Specs", color: "text-[#0D9488]" },
+  ];
 
-function Education() {
   return (
-    <Section id="education" label="Education_Log">
-      <div className="grid md:grid-cols-2 gap-6">
-        {EDU_DATA.map((edu) => {
-          const accent =
-            edu.color === "cyan"
-              ? {
-                border: "border-cyan-500/30",
-                bg: "bg-cyan-500/5",
-                text: "text-cyan-400",
-                badge: "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30",
-                glow: "box-glow-cyan",
-              }
-              : {
-                border: "border-purple-500/30",
-                bg: "bg-purple-500/5",
-                text: "text-purple-400",
-                badge: "bg-purple-500/15 text-purple-300 border border-purple-500/30",
-                glow: "box-glow-purple",
-              };
+    <Section id="about" label="About.system" subtitle="System Diagnostic & Developer Specifications">
+      <div className="grid lg:grid-cols-3 gap-8 items-start font-sans">
+        
+        {/* Main Bio Card */}
+        <div className="lg:col-span-2 bg-[#FFFFFF] border border-[#E5E2DC] rounded-xl p-6 sm:p-8 space-y-6 shadow-md">
+          <div className="flex items-center gap-3 border-b border-[#E5E2DC] pb-4">
+            <div className="w-3 h-3 rounded-full bg-[#0D9488] animate-pulse" />
+            <span className="font-mono text-xs text-[#0D9488] font-semibold uppercase tracking-wider">
+              Status: Operational &bull; CS Undergrad @ JSS Noida
+            </span>
+          </div>
 
-          return (
-            <div
-              key={edu.degree}
-              className={`rounded-xl border ${accent.border} ${accent.bg} ${accent.glow} p-6 relative overflow-hidden`}
-            >
-              {/* Corner accent */}
-              <div className={`absolute top-0 right-0 w-16 h-16 ${accent.text} opacity-10 font-mono text-6xl leading-none select-none`}>
-                &#10094;
-              </div>
+          <p className="text-[#1A1A1A] leading-relaxed text-base">
+            I am a <strong className="text-[#1A1A1A] font-bold">B.Tech Computer Science student (2023–2027)</strong> at JSS Academy of Technical Education, Noida, with a deep focus on building robust, scalable backend systems and high-efficiency APIs.
+          </p>
 
-              <div className="font-mono text-xs text-gray-500 mb-1">{edu.period}</div>
-              <h3 className={`font-mono font-bold text-sm ${accent.text} mb-1`}>
-                {edu.degree}
-              </h3>
-              <p className="text-white text-sm font-medium mb-0.5">{edu.institution}</p>
-              <p className="text-gray-500 text-xs mb-3">{edu.location}</p>
+          <p className="text-[#5C6670] leading-relaxed text-sm">
+            My engineering expertise spans <strong className="text-[#1A1A1A]">Core Java (OOP, Collections, Multithreading)</strong>, <strong className="text-[#1A1A1A]">Spring Boot microservices</strong>, relational schema design with <strong className="text-[#1A1A1A]">PostgreSQL</strong>, and spatial querying using <strong className="text-[#1A1A1A]">PostGIS</strong>. I take pride in writing clean, modular code backed by strict design patterns and unit tests.
+          </p>
 
-              <span className={`inline-block font-mono text-xs px-2 py-0.5 rounded ${accent.badge} mb-4`}>
-                {edu.gpa}
-              </span>
-
-              <div className="space-y-1">
-                {edu.highlights.map((h) => (
-                  <div key={h} className="flex items-center gap-2 font-mono text-xs text-gray-400">
-                    <span className={`${accent.text}`}>▸</span>
-                    {h}
-                  </div>
-                ))}
-              </div>
+          <div className="pt-2 font-mono text-xs text-[#5C6670] space-y-2 border-t border-[#E5E2DC]">
+            <div className="flex items-center gap-2">
+              <span className="text-[#4338CA]">▸</span>
+              <span className="text-[#1A1A1A] font-medium">Core Focus:</span> High-throughput REST APIs, Geospatial Indexing & System Security
             </div>
-          );
-        })}
+            <div className="flex items-center gap-2">
+              <span className="text-[#4338CA]">▸</span>
+              <span className="text-[#1A1A1A] font-medium">Current Location:</span> Noida / NCR, India
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid Side Column */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 font-mono">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-[#FFFFFF] border border-[#E5E2DC] rounded-xl p-5 hover:border-[#4338CA]/40 transition-colors shadow-sm"
+            >
+              <div className={`text-3xl font-extrabold ${stat.color} mb-1`}>{stat.value}</div>
+              <div className="text-xs font-bold text-[#1A1A1A] mb-0.5">{stat.label}</div>
+              <div className="text-[11px] text-[#5C6670]">{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </Section>
   );
 }
 
 // ════════════════════════════════════════
-//  SKILLS
+//  SKILLS MATRIX
 // ════════════════════════════════════════
 const SKILL_CATEGORIES = [
   {
     label: "Languages",
     icon: "⟨/⟩",
-    color: "green",
-    skills: ["Python", "JavaScript", "TypeScript", "C++", "SQL"],
+    color: "indigo",
+    skills: ["Core Java (OOP/Collections)", "Python", "JavaScript", "SQL"],
   },
   {
-    label: "Backend",
+    label: "Backend & Frameworks",
     icon: "⚙",
-    color: "cyan",
-    skills: ["Node.js", "Express.js", "FastAPI", "REST APIs", "JWT Auth"],
+    color: "teal",
+    skills: ["Spring Boot", "REST APIs", "Hibernate / JPA", "Node.js", "Express"],
   },
   {
-    label: "Databases",
+    label: "Databases & Spatial",
     icon: "◈",
-    color: "yellow",
-    skills: ["PostgreSQL", "MongoDB", "Redis", "SQLite"],
+    color: "amber",
+    skills: ["PostgreSQL", "PostGIS", "MySQL", "MongoDB"],
   },
   {
-    label: "Frontend",
-    icon: "◻",
-    color: "purple",
-    skills: ["React", "Tailwind CSS", "HTML5", "CSS3", "Vite"],
-  },
-  {
-    label: "Tools",
+    label: "Tools & DevOps",
     icon: "⌘",
-    color: "pink",
-    skills: ["Git", "Docker", "Postman", "VS Code", "Linux"],
+    color: "indigoSoft",
+    skills: ["Git", "GitHub", "Docker", "Maven", "JUnit", "Postman", "Vercel", "Render"],
   },
 ];
 
 const COLOR_MAP = {
-  green: { card: "border-green-500/25 bg-green-500/5", icon: "text-green-400", tag: "bg-green-500/10 text-green-300 border-green-500/20", label: "text-green-400" },
-  cyan: { card: "border-cyan-500/25 bg-cyan-500/5", icon: "text-cyan-400", tag: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20", label: "text-cyan-400" },
-  yellow: { card: "border-yellow-500/25 bg-yellow-500/5", icon: "text-yellow-400", tag: "bg-yellow-500/10 text-yellow-300 border-yellow-500/20", label: "text-yellow-400" },
-  purple: { card: "border-purple-500/25 bg-purple-500/5", icon: "text-purple-400", tag: "bg-purple-500/10 text-purple-300 border-purple-500/20", label: "text-purple-400" },
-  pink: { card: "border-pink-500/25 bg-pink-500/5", icon: "text-pink-400", tag: "bg-pink-500/10 text-pink-300 border-pink-500/20", label: "text-pink-400" },
+  indigo: { card: "border-[#4338CA]/25 bg-[#FFFFFF] shadow-md hover:border-[#4338CA]/50", icon: "text-[#4338CA]", tag: "bg-[#EEF0F7] text-[#4338CA] border border-[#4338CA]/20", label: "text-[#4338CA]" },
+  teal: { card: "border-[#0D9488]/25 bg-[#FFFFFF] shadow-md hover:border-[#0D9488]/50", icon: "text-[#0D9488]", tag: "bg-[#CCFBF1] text-[#0D9488] border border-[#0D9488]/25", label: "text-[#0D9488]" },
+  amber: { card: "border-amber-500/25 bg-[#FFFFFF] shadow-md hover:border-amber-500/50", icon: "text-amber-600", tag: "bg-amber-50 text-amber-700 border border-amber-200", label: "text-amber-700" },
+  indigoSoft: { card: "border-[#E5E2DC] bg-[#FFFFFF] shadow-md hover:border-[#4338CA]/40", icon: "text-[#4338CA]", tag: "bg-[#F1F0EC] text-[#1A1A1A] border border-[#E5E2DC]", label: "text-[#1A1A1A]" },
+  // aliases
+  green: { card: "border-[#4338CA]/25 bg-[#FFFFFF] shadow-md", icon: "text-[#4338CA]", tag: "bg-[#EEF0F7] text-[#4338CA] border border-[#4338CA]/20", label: "text-[#4338CA]" },
+  cyan: { card: "border-[#0D9488]/25 bg-[#FFFFFF] shadow-md", icon: "text-[#0D9488]", tag: "bg-[#CCFBF1] text-[#0D9488] border border-[#0D9488]/25", label: "text-[#0D9488]" },
+  yellow: { card: "border-amber-500/25 bg-[#FFFFFF] shadow-md", icon: "text-amber-600", tag: "bg-amber-50 text-amber-700 border border-amber-200", label: "text-amber-700" },
+  purple: { card: "border-[#4338CA]/25 bg-[#FFFFFF] shadow-md", icon: "text-[#4338CA]", tag: "bg-[#EEF0F7] text-[#4338CA] border border-[#4338CA]/20", label: "text-[#4338CA]" },
 };
 
-function Skills() {
+function SkillsMatrix() {
   return (
-    <Section id="skills" label="Skills_Matrix">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {SKILL_CATEGORIES.map((cat) => {
-          const c = COLOR_MAP[cat.color];
-          return (
-            <div key={cat.label} className={`rounded-xl border ${c.card} p-5 hover:scale-[1.02] transition-transform duration-200`}>
-              <div className="flex items-center gap-3 mb-4">
-                <span className={`font-mono text-lg ${c.icon}`}>{cat.icon}</span>
-                <span className={`font-mono text-xs font-bold uppercase tracking-widest ${c.label}`}>
-                  {cat.label}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {cat.skills.map((s) => (
-                  <span
-                    key={s}
-                    className={`font-mono text-xs px-2.5 py-1 rounded border ${c.tag}`}
-                  >
-                    {s}
+    <Section id="skills" label="Skills.matrix" subtitle="Interactive 3D Skill Mesh & Technical Stack">
+      <div className="space-y-8">
+        {/* Interactive 3D Globe Component */}
+        <SkillsGlobe />
+
+        {/* Categorized Skills Grid */}
+        <div className="grid sm:grid-cols-2 gap-6">
+          {SKILL_CATEGORIES.map((cat) => {
+            const c = COLOR_MAP[cat.color] || COLOR_MAP.indigo;
+            return (
+              <div key={cat.label} className={`rounded-xl border ${c.card} p-6 hover:scale-[1.01] transition-transform duration-200 shadow-md`}>
+                <div className="flex items-center gap-3 mb-5 border-b border-[#E5E2DC] pb-3">
+                  <span className={`font-mono text-xl ${c.icon}`}>{cat.icon}</span>
+                  <span className={`font-mono text-xs font-bold uppercase tracking-wider ${c.label}`}>
+                    {cat.label}
                   </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </Section>
-  );
-}
-
-// ════════════════════════════════════════
-//  PROJECTS
-// ════════════════════════════════════════
-const PROJECTS = [
-  {
-    id: "ULTRON",
-    codename: "ULTRON",
-    title: "Ultron — AI Monitoring Agent",
-    desc: "A distributed AI-powered monitoring system with real-time alerting, anomaly detection via ML pipelines, and a RESTful control plane exposing system telemetry.",
-    stack: ["Python", "FastAPI", "PostgreSQL", "Redis", "React"],
-    status: "Deployment in Progress",
-    color: "cyan",
-    repo: "https://github.com/avikal2808",
-    metrics: ["5+ RESTful endpoints", "Real-time telemetry", "ML anomaly detection"],
-  },
-  {
-    id: "BARTR",
-    codename: "BARTR",
-    title: "Bartr — Skill Exchange Platform",
-    desc: "A peer-to-peer skill barter marketplace with JWT authentication, smart matching algorithms, and a websocket-powered real-time chat system.",
-    stack: ["Node.js", "Express", "MongoDB", "React", "Socket.io"],
-    status: "Deployment in Progress",
-    color: "purple",
-    repo: "https://github.com/avikal2808",
-    metrics: ["20% match efficiency gain", "Real-time messaging", "JWT auth flow"],
-  },
-  {
-    id: "TERRANEST",
-    codename: "TERRANEST",
-    title: "TerraNest — Eco Housing Platform",
-    desc: "A sustainable housing discovery platform featuring property listings with eco-ratings, carbon footprint calculators, and geolocation filtering.",
-    stack: ["React", "Supabase", "PostgreSQL", "Tailwind", "Vite"],
-    status: "Deployment in Progress",
-    color: "green",
-    repo: "https://github.com/avikal2808",
-    metrics: ["Sub-10ms queries", "Geo-based filtering", "Eco-rating engine"],
-  },
-];
-
-const PROJ_COLORS = {
-  cyan: { border: "border-cyan-500/30", bg: "bg-cyan-500/5", accent: "text-cyan-400", badge: "bg-yellow-500/15 border-yellow-400/50 text-yellow-300", glow: "hover:box-glow-cyan" },
-  purple: { border: "border-purple-500/30", bg: "bg-purple-500/5", accent: "text-purple-400", badge: "bg-yellow-500/15 border-yellow-400/50 text-yellow-300", glow: "hover:box-glow-purple" },
-  green: { border: "border-green-500/30", bg: "bg-green-500/5", accent: "text-green-400", badge: "bg-yellow-500/15 border-yellow-400/50 text-yellow-300", glow: "hover:box-glow-green" },
-};
-
-function Projects() {
-  return (
-    <Section id="projects" label="Projects_Registry">
-      <div className="grid md:grid-cols-3 gap-6">
-        {PROJECTS.map((p) => {
-          const c = PROJ_COLORS[p.color];
-          return (
-            <div
-              key={p.id}
-              className={`rounded-xl border ${c.border} ${c.bg} ${c.glow} p-6 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02]`}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className={`font-mono text-xs ${c.accent} mb-1 tracking-widest`}>
-                    PROJECT::{p.codename}
-                  </div>
-                  <h3 className="text-white text-sm font-semibold leading-snug">{p.title}</h3>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  {cat.skills.map((s) => (
+                    <span
+                      key={s}
+                      className={`font-mono text-xs px-3 py-1 rounded border ${c.tag}`}
+                    >
+                      {s}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              {/* Deployment badge */}
-              <span className={`self-start inline-flex items-center gap-1.5 font-mono text-xs px-2.5 py-1 rounded border ${c.badge} badge-pulse`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                {p.status}
-              </span>
-
-              {/* Description */}
-              <p className="text-gray-400 text-xs leading-relaxed">{p.desc}</p>
-
-              {/* Metrics */}
-              <div className="space-y-1">
-                {p.metrics.map((m) => (
-                  <div key={m} className={`font-mono text-xs ${c.accent} flex items-center gap-2`}>
-                    <span className="text-gray-600">▸</span>
-                    {m}
-                  </div>
-                ))}
-              </div>
-
-              {/* Stack */}
-              <div className="flex flex-wrap gap-1.5 mt-auto">
-                {p.stack.map((s) => (
-                  <span key={s} className="font-mono text-xs px-2 py-0.5 rounded bg-gray-800/80 border border-gray-700/50 text-gray-400">
-                    {s}
-                  </span>
-                ))}
-              </div>
-
-              {/* GitHub link */}
-              <a
-                href={p.repo}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`font-mono text-xs ${c.accent} hover:underline flex items-center gap-1.5 transition-colors mt-1`}
-              >
-                <span>⎇</span>
-                github.com/avikal2808
-              </a>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </Section>
   );
 }
 
+// ════════════════════════════════════════
+//  PROJECTS REGISTRY
+// ════════════════════════════════════════
+function ProjectsRegistry() {
+  return (
+    <Section id="projects" label="Projects.registry" subtitle="System Architecture & Open-Source Repositories">
+      <GithubProjectsExplorer />
+    </Section>
+  );
+}
 
+// ════════════════════════════════════════
+//  EDUCATION & ACHIEVEMENTS
+// ════════════════════════════════════════
+function EducationAndAchievements() {
+  return (
+    <Section id="education" label="Education.log" subtitle="Academic Background & Algorithmic Problem Solving">
+      <div className="grid md:grid-cols-2 gap-6">
+        
+        {/* Education Card */}
+        <div className="rounded-xl border border-[#4338CA]/25 bg-[#FFFFFF] p-6 space-y-4 shadow-md hover:border-[#4338CA]/40 transition-colors">
+          <div className="flex items-center justify-between border-b border-[#E5E2DC] pb-3">
+            <h3 className="font-mono font-bold text-sm text-[#4338CA] uppercase tracking-wider">
+              Degree & Institution
+            </h3>
+            <span className="font-mono text-xs text-[#5C6670]">2023 – 2027</span>
+          </div>
+
+          <div>
+            <h4 className="text-[#1A1A1A] text-base font-bold mb-1">B.Tech in Computer Science</h4>
+            <p className="text-[#5C6670] text-sm font-medium">JSS Academy of Technical Education, Noida</p>
+            <p className="text-[#5C6670] text-xs">India</p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-[#E5E2DC]">
+            <div className="text-xs text-[#5C6670] font-mono font-semibold">Core Coursework:</div>
+            <div className="flex flex-wrap gap-2">
+              {['Data Structures & Algorithms', 'Object-Oriented Programming', 'System Design', 'Computer Networks'].map((course) => (
+                <span key={course} className="font-mono text-xs px-2.5 py-1 rounded bg-[#EEF0F7] border border-[#4338CA]/20 text-[#4338CA]">
+                  {course}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* DSA & Achievements Card */}
+        <div className="rounded-xl border border-[#0D9488]/25 bg-[#FFFFFF] p-6 space-y-4 shadow-md hover:border-[#0D9488]/40 transition-colors">
+          <div className="flex items-center justify-between border-b border-[#E5E2DC] pb-3">
+            <h3 className="font-mono font-bold text-sm text-[#0D9488] uppercase tracking-wider">
+              Algorithmic Problem Solving
+            </h3>
+            <span className="font-mono text-xs text-[#0D9488] font-bold bg-[#CCFBF1] px-2 py-0.5 rounded border border-[#0D9488]/25">150+ SOLVED</span>
+          </div>
+
+          <div>
+            <h4 className="text-[#1A1A1A] text-base font-bold mb-1">LeetCode Competitive DSA</h4>
+            <p className="text-[#5C6670] text-sm leading-relaxed">
+              Solved 150+ Data Structures & Algorithms problems in Core Java, mastering optimized logical thinking, space-time complexity analysis, and advanced collection structures.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-[#E5E2DC]">
+            <div className="text-xs text-[#5C6670] font-mono font-semibold">Focus Areas:</div>
+            <div className="flex flex-wrap gap-2">
+              {['Java Collections', 'Arrays & Strings', 'Trees & Graphs', 'Dynamic Programming', 'SQL Optimization'].map((topic) => (
+                <span key={topic} className="font-mono text-xs px-2.5 py-1 rounded bg-[#CCFBF1] border border-[#0D9488]/25 text-[#0D9488]">
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </Section>
+  );
+}
 
 // ════════════════════════════════════════
 //  FOOTER
 // ════════════════════════════════════════
 function Footer() {
   return (
-    <footer className="border-t border-gray-800/60 py-8 px-6">
-      <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4 font-mono text-xs text-gray-600">
-        <span>
-          <span className="text-green-400">©</span> {new Date().getFullYear()} Avikal Pandey
-        </span>
-        <span>
-          Built with <span className="text-green-400">React</span> +{" "}
-          <span className="text-cyan-400">Tailwind</span>
-        </span>
-        <a
-          href="https://github.com/avikal2808"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-green-400 transition-colors"
-        >
-          github.com/avikal2808 ↗
-        </a>
+    <footer className="border-t border-[#E5E2DC] py-10 px-6 bg-[#FFFFFF] relative z-10 shadow-sm">
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-[#5C6670]">
+        <div className="flex items-center gap-2">
+          <span className="text-[#4338CA]">©</span> {new Date().getFullYear()} <span className="text-[#1A1A1A] font-semibold">Avikal Pandey</span>
+          <span className="text-[#E5E2DC]">&bull;</span>
+          <span>System Architect</span>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <a
+            href="https://github.com/avikal2808"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[#4338CA] transition-colors"
+          >
+            GitHub ↗
+          </a>
+          <a
+            href="mailto:avikalpandey2004@gmail.com"
+            className="hover:text-[#0D9488] transition-colors"
+          >
+            Email ↗
+          </a>
+          <span className="text-[#5C6670]">Built with React & Tailwind</span>
+        </div>
       </div>
     </footer>
   );
 }
 
 // ════════════════════════════════════════
-//  ROOT COMPONENT
+//  ROOT PORTFOLIO COMPONENT
 // ════════════════════════════════════════
 export default function Portfolio() {
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen text-[#1A1A1A] relative">
+      <SideHudNav />
       <Header />
-      <main>
+      <main className="pb-16 md:pb-0">
         <HeroConsole />
-        <Education />
-        <Skills />
-        <Projects />
+        <AboutSystem />
+        <SkillsMatrix />
+        <ProjectsRegistry />
         <ExperienceLog />
+        <EducationAndAchievements />
       </main>
       <Footer />
     </div>
   );
 }
+
